@@ -93,9 +93,10 @@ module.exports = require('./lib');
     /*********************************************************************/
 
     /**
-     * TODO DOC
+     * This class is used to provide scheming functionalities, including sanitization and validation.
      *
      * @class XPSchema
+     * @description This class is used to provide scheming functionalities, including sanitization and validation.
      */
     module.exports = new XP.Class('XPSchema', {
 
