@@ -3,6 +3,7 @@
   "license": "BSD-3-Clause",
   "version": "0.8.0",
   "description": "This class is used to provide scheming functionalities, including sanitization and validation.",
+  "homepage": "http://www.expandjs.com/classes/xp-schema",
   "authors": [
     "Giuliano Rullo <g.rullo@expandjs.com>",
     "Maurizio Stefàno <m.stefano@expandjs.com>",
