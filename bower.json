@@ -9,6 +9,13 @@
     "Maurizio Stefàno <m.stefano@expandjs.com>",
     "Robert Manolea <r.manolea@expandjs.com>"
   ],
+  "keywords": [
+    "nodejs",
+    "web app",
+    "javascript",
+    "expandjs",
+    "web-components"
+  ],
   "main": [
     "xp-schema.html"
   ],
