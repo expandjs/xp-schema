@@ -1,29 +1,6 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.XPSchema = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
 },{}],2:[function(require,module,exports){
-/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
-
-module.exports = require('./lib');
-},{"./lib":3}],3:[function(require,module,exports){
-/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
-
-(function (window) {
-    "use strict";
-
-    /**
-     * Returns required or a browser's global
-     *
-     * @param {Function | Object} required
-     * @param {string} browserName
-     * @returns {*}
-     */
-    module.exports = function (required, browserName) {
-        if (required && (typeof required !== 'object' || Object.keys(required).length)) { return required; }
-        if (window && typeof browserName === 'string') { return window[browserName]; }
-    };
-
-}(typeof window !== 'undefined' ? window : null));
-},{}],4:[function(require,module,exports){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
 /**
@@ -37,8 +14,7 @@ module.exports = require('./lib');
     "use strict";
 
     // Vars
-    var load = require('xp-load'),
-        XP   = load(require('expandjs'), 'XP');
+    var XP = require('expandjs');
 
     /*********************************************************************/
 
@@ -63,7 +39,7 @@ module.exports = require('./lib');
     };
 
 }());
-},{"expandjs":1,"xp-load":2}],5:[function(require,module,exports){
+},{"expandjs":1}],3:[function(require,module,exports){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
 /**
@@ -80,8 +56,7 @@ module.exports = require('./lib');
     var filter     = require('./filter'),
         sanitize   = require('./sanitize'),
         validate   = require('./validate'),
-        load       = require('xp-load'),
-        XP         = load(require('expandjs'), 'XP'),
+        XP         = require('expandjs'),
 
         filterFn   = function (item) { return XP.has(item, 'input') || XP.has(item, 'options'); },
         mapFn      = function (item, handle) { item = XP.assign({handle: handle}, item); XP.withdraw(item, 'method'); return item; },
@@ -291,13 +266,8 @@ module.exports = require('./lib');
         }
     });
 
-    /*********************************************************************/
-
-    // Browserify
-    XP.browserify(module.exports, 'XPSchema');
-
 }());
-},{"./filter":4,"./sanitize":6,"./validate":7,"expandjs":1,"xp-load":2}],6:[function(require,module,exports){
+},{"./filter":2,"./sanitize":4,"./validate":5,"expandjs":1}],4:[function(require,module,exports){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
 /**
@@ -311,9 +281,8 @@ module.exports = require('./lib');
     "use strict";
 
     // Vars
-    var exp  = module.exports,
-        load = require('xp-load'),
-        XP   = load(require('expandjs'), 'XP');
+    var exp = module.exports,
+        XP  = require('expandjs');
 
     /*********************************************************************/
 
@@ -479,7 +448,7 @@ module.exports = require('./lib');
     };
 
 }());
-},{"expandjs":1,"xp-load":2}],7:[function(require,module,exports){
+},{"expandjs":1}],5:[function(require,module,exports){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
 /**
@@ -493,9 +462,8 @@ module.exports = require('./lib');
     "use strict";
 
     // Vars
-    var exp  = module.exports,
-        load = require('xp-load'),
-        XP   = load(require('expandjs'), 'XP');
+    var exp = module.exports,
+        XP  = require('expandjs');
 
     /*********************************************************************/
 
@@ -832,6 +800,9 @@ module.exports = require('./lib');
     };
 
 }());
-},{"expandjs":1,"xp-load":2}],8:[function(require,module,exports){
-arguments[4][2][0].apply(exports,arguments)
-},{"./lib":5,"dup":2}]},{},[8]);
+},{"expandjs":1}],6:[function(require,module,exports){
+/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
+
+module.exports = require('./lib');
+},{"./lib":3}]},{},[6])(6)
+});
