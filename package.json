@@ -19,8 +19,8 @@
     "xp-load": "*"
   },
   "scripts": {
-    "build": "browserify index -i expandjs > dist/xp-schema.js --standalone XPSchema && npm run build:min",
-    "build:min": "browserify -d index -i expandjs -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] > dist/xp-schema.min.js --standalone XPSchema"
+    "build": "browserify index -i expandjs --standalone XPSchema > dist/xp-schema.js && npm run build:min",
+    "build:min": "browserify -d index -i expandjs --standalone XPSchema -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] > dist/xp-schema.min.js"
   },
   "keywords": [
       "expandjs",
