@@ -23,6 +23,6 @@
     "**/.*"
   ],
   "dependencies": {
-    "expandjs": "ExpandJS/expandjs"
+    "expandjs": "ExpandJS/expandjs#alpha"
   }
 }
