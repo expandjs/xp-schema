@@ -15,7 +15,7 @@
     "url": "https://github.com/ExpandJS/xp-schema.git"
   },
   "dependencies": {
-    "expandjs": "*"
+    "expandjs": "^0.8.12"
   },
   "scripts": {
     "build": "browserify index -i expandjs --standalone XPSchema > dist/xp-schema.js && npm run build:min",
