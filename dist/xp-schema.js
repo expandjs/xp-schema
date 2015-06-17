@@ -1,6 +1,10 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.XPSchema = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
 },{}],2:[function(require,module,exports){
+/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
+
+module.exports = require('./lib');
+},{"./lib":4}],3:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -41,7 +45,7 @@
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],3:[function(require,module,exports){
+},{"expandjs":1}],4:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -74,7 +78,7 @@
      * This class is used to provide scheming functionalities, including sanitization and validation.
      *
      * @class XPSchema
-     * @description This class is used to provide scheming functionalities, including sanitization and validation.
+     * @description This class is used to provide scheming functionalities, including sanitization and validation
      */
     module.exports = new XP.Class('XPSchema', {
 
@@ -271,7 +275,7 @@
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./filter":2,"./sanitize":4,"./validate":5,"expandjs":1}],4:[function(require,module,exports){
+},{"./filter":3,"./sanitize":5,"./validate":6,"expandjs":1}],5:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -454,7 +458,7 @@
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],5:[function(require,module,exports){
+},{"expandjs":1}],6:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -808,9 +812,5 @@
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],6:[function(require,module,exports){
-/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
-
-module.exports = require('./lib');
-},{"./lib":3}]},{},[6])(6)
+},{"expandjs":1}]},{},[2])(2)
 });
