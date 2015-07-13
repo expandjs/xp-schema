@@ -408,18 +408,6 @@ module.exports = require('./lib');
     exp.sanitizers = {
 
         /**
-         * Returns formatted representation of target
-         *
-         * @param {*} target
-         * @param {string} format
-         * @returns {*}
-         * @private
-         */
-        format: {options: XP.formats, type: 'string', method: function (target, format) {
-            return !XP.isString(target, true) || !XP.has(XP, format) ? target : XP[format](target);
-        }},
-
-        /**
          * Returns map representation of target (based on bool)
          *
          * @param {*} target
@@ -586,8 +574,16 @@ module.exports = require('./lib');
      * @private
      */
     exp.patterns = {
-        custom: {},
-        stock: {}
+        camelCase: XP.camelCaseRegex,
+        capitalize: XP.capitalizeRegex,
+        kebabCase: XP.kebabCaseRegex,
+        keyCase: XP.keyCaseRegex,
+        lowerCase: XP.lowerCaseRegex,
+        readable: XP.readableRegex,
+        snakeCase: XP.snakeCaseRegex,
+        startCase: XP.startCaseRegex,
+        trim: XP.trimRegex,
+        upperCase: XP.upperCaseRegex
     };
 
     /**
@@ -765,9 +761,9 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          * @private
          */
-        pattern: {input: 'text', options: XP.keys(exp.patterns.stock), type: 'string', method: function (target, pattern, name) {
-            var reg = !XP.isString(target) || !XP.isString(pattern, true) ? null : (XP.has(exp.patterns.stock, pattern) ? exp.patterns.stock[pattern] : (XP.has(exp.patterns.custom, pattern) ? exp.patterns.custom[pattern] : pattern));
-            if (XP.isString(reg) && XP.isRegExp(reg = XP.toRegExp(pattern))) { exp.patterns.custom[pattern] = reg; }
+        pattern: {input: 'text', options: XP.keys(exp.patterns), type: 'string', method: function (target, pattern, name) {
+            var reg = XP.isString(target) && XP.isString(pattern, true) && (exp.patterns[pattern] || pattern);
+            if (XP.isString(reg) && XP.isRegExp(reg = XP.toRegExp(pattern))) { exp.patterns[pattern] = reg; }
             return !reg ? false : (!reg.test(target) ? new XP.InvalidError(name || 'target') : null);
         }},
 
