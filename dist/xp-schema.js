@@ -181,8 +181,6 @@ module.exports = require('./lib');
                 switch (name) {
                 case 'target':
                     return XP.isObject(target = JSON.parse(XP.toJSON(target, self.options.useful))) ? target : {};
-                case 'opt':
-                    return XP.assign({}, self.options, target);
                 default:
                     return target;
                 }
@@ -311,13 +309,13 @@ module.exports = require('./lib');
 
         // Restricting
         XP.forOwn(target, function (val, key) {
-            if (opt.strict && !XP.has(fields, key)) { delete target[key]; }
+            if (opt.strict && !fields[key]) { delete target[key]; }
         });
 
         // Sanitizing
-        XP.forOwn(fields, function (val, key) {
-            target[key] = exp.sanitizeStep(target[key], fields[key], fields, opt, (name ? name + '.' : '') + key);
-            if (opt.useful && target[key] === null) { delete target[key]; }
+        XP.forOwn(fields, function (field, key) {
+            target[key] = exp.sanitizeStep(target[key], field, fields, opt, (name ? name + '.' : '') + key);
+            if (opt.useful && XP.isVoid(target[key])) { delete target[key]; }
         });
 
         return target;
@@ -341,21 +339,18 @@ module.exports = require('./lib');
         // Checking
         if (!XP.isObject(field)) { return step; }
 
-        // Sanitizing
+        // Sanitizing (step)
         step = exp.sanitizeValue(step, field, null, name);
 
-        // Sanitizing (multi)
-        if (field.multi && XP.isArray(step)) {
-            step.forEach(function (value, i) {
-                step[i] = exp.sanitizeValue(value, field, i, name + '[' + i + ']');
-                if (XP.isObject(step[i]) && (field.fields || field.type === 'recursive')) {
-                    step[i] = exp(step[i], field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name + '[' + i + ']');
+        // Sanitizing (values)
+        if (field.map || field.multi) {
+            XP[field.map ? 'forOwn' : 'forEach'](step, function (value, index) {
+                step[index] = exp.sanitizeValue(value, field, index, name + '[' + index + ']');
+                if (XP.isObject(step[index]) && (field.fields || field.type === 'recursive')) {
+                    step[index] = exp(step[index], field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name + '[' + index + ']');
                 }
             });
-        }
-
-        // Sanitizing (map)
-        if (field.map && XP.isObject(step) && (field.fields || field.type === 'recursive')) {
+        } else if (XP.isObject(step) && (field.fields || field.type === 'recursive')) {
             step = exp(step, field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name);
         }
 
@@ -367,11 +362,11 @@ module.exports = require('./lib');
      *
      * @param {*} value
      * @param {Object} [field]
-     * @param {number | string} [i]
+     * @param {number | string} [index]
      * @param {string} [name]
      * @returns {*}
      */
-    exp.sanitizeValue = function (value, field, i, name) {
+    exp.sanitizeValue = function (value, field, index, name) {
 
         // Setting
         value = XP.isDefined(value) ? value : null;
@@ -380,15 +375,17 @@ module.exports = require('./lib');
         if (!XP.isObject(field)) { return value; }
 
         // Sanitizing (type)
-        if (XP.isVoid(i)) {
-            value = (field.map ? exp.sanitizers.map : exp.sanitizers.multi).method(value, field.multi, name);
-        } else if (!field.multi) {
+        if (field.map && XP.isVoid(index)) {
+            value = exp.sanitizers.map.method(value, field.map, name);
+        } else if (field.multi && XP.isVoid(index)) {
+            value = exp.sanitizers.multi.method(value, field.multi, name);
+        } else {
             value = exp.sanitizers.type.method(value, field.type, name);
         }
 
-        // Sanitizing
+        // Sanitizing (other)
         XP.forOwn(field, function (val, key) {
-            if (XP.has(exp.sanitizers, key) && !XP.includes(['map', 'multi', 'type'], key)) {
+            if (exp.sanitizers[key] || XP.includes(['map', 'multi', 'type'], key)) {
                 value = exp.sanitizers[key].method(value, field[key], name);
             }
         });
@@ -416,7 +413,7 @@ module.exports = require('./lib');
          * @private
          */
         map: {method: function (target, bool) {
-            return !bool ? target : XP.toObject(target, true);
+            return (bool && XP.toObject(target, true)) || target;
         }},
 
         /**
@@ -428,7 +425,7 @@ module.exports = require('./lib');
          * @private
          */
         multi: {method: function (target, bool) {
-            return !bool ? target : XP.toArray(target, true);
+            return (bool && XP.toArray(target, true)) || target;
         }},
 
         /**
@@ -440,7 +437,7 @@ module.exports = require('./lib');
          * @private
          */
         type: {method: function (target, type) {
-            return type !== 'boolean' ? target : !!target;
+            return type === 'boolean' ? !!target : target;
         }}
     };
 
@@ -481,8 +478,8 @@ module.exports = require('./lib');
         if (!XP.isObject(fields)) { return target; }
 
         // Validating
-        XP.forOwn(fields, function (val, key) {
-            exp.validateStep(target[key], fields[key], fields, opt, (name ? name + '.' : '') + key);
+        XP.forOwn(fields, function (field, key) {
+            exp.validateStep(target[key], field, fields, opt, (name ? name + '.' : '') + key);
         });
 
         return target;
@@ -506,21 +503,18 @@ module.exports = require('./lib');
         // Checking
         if (!XP.isObject(field)) { return step; }
 
-        // Validating
+        // Validating (step)
         exp.validateValue(step, field, null, name);
 
-        // Validating (multi)
-        if (field.multi && XP.isArray(step)) {
-            step.forEach(function (value, i) {
-                exp.validateValue(value, field, i, name + '[' + i + ']');
+        // Validating (values)
+        if (field.map || field.multi) {
+            XP[field.map ? 'forOwn' : 'forEach'](step, function (value, index) {
+                exp.validateValue(value, field, index, name + '[' + index + ']');
                 if (XP.isObject(value) && (field.fields || field.type === 'recursive')) {
-                    exp(value, field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name + '[' + i + ']');
+                    exp(value, field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name + '[' + index + ']');
                 }
             });
-        }
-
-        // Validating (map)
-        if (field.map && XP.isObject(step) && (field.fields || field.type === 'recursive')) {
+        } else if (XP.isObject(step) && (field.fields || field.type === 'recursive')) {
             exp(step, field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name);
         }
 
@@ -532,11 +526,11 @@ module.exports = require('./lib');
      *
      * @param {*} value
      * @param {Object} [field]
-     * @param {number | string} [i]
+     * @param {number | string} [index]
      * @param {string} [name]
      * @returns {*}
      */
-    exp.validateValue = function (value, field, i, name) {
+    exp.validateValue = function (value, field, index, name) {
 
         // Vars
         var err;
@@ -548,15 +542,17 @@ module.exports = require('./lib');
         if (!XP.isObject(field)) { return value; }
 
         // Validating (type)
-        if (XP.isVoid(i)) {
-            if (XP.isError(err = (field.map ? exp.validators.map : exp.validators.multi).method(value, field.multi, name))) { throw err; }
-        } else if (!field.multi) {
+        if (field.map && XP.isVoid(index)) {
+            if (XP.isError(err = exp.validators.map.method(value, field.map, name))) { throw err; }
+        } else if (field.multi && XP.isVoid(index)) {
+            if (XP.isError(err = exp.validators.multi.method(value, field.multi, name))) { throw err; }
+        } else {
             if (XP.isError(err = exp.validators.type.method(value, field.type, name))) { throw err; }
         }
 
-        // Validating
+        // Validating (other)
         XP.forOwn(field, function (val, key) {
-            if (XP.has(exp.validators, key) && !XP.includes(['map', 'multi', 'type'], key)) {
+            if (exp.validators[key] && !XP.includes(['map', 'multi', 'type'], key)) {
                 if (XP.isError(err = exp.validators[key].method(value, field[key], name))) { throw err; }
             }
         });
