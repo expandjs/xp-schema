@@ -385,7 +385,7 @@ module.exports = require('./lib');
 
         // Sanitizing (other)
         XP.forOwn(field, function (val, key) {
-            if (exp.sanitizers[key] || XP.includes(['map', 'multi', 'type'], key)) {
+            if (exp.sanitizers[key] && !XP.includes(['map', 'multi', 'type'], key)) {
                 value = exp.sanitizers[key].method(value, field[key], name);
             }
         });
