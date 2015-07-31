@@ -94,19 +94,19 @@ module.exports = require('./lib');
 
         /**
          * @constructs
-         * @param {Object} opt
-         *   @param {string} opt.id
-         *   @param {Object} [opt.fields]
-         *   @param {boolean} [opt.strict = false]
-         *   @param {boolean} [opt.useful = false]
+         * @param {Object} options
+         *   @param {string} options.id
+         *   @param {Object} [options.fields]
+         *   @param {boolean} [options.strict = false]
+         *   @param {boolean} [options.useful = false]
          */
-        initialize: function (opt) {
+        initialize: function (options) {
 
             // Vars
             var self = this;
 
             // Setting
-            self.options = opt;
+            self.options = options;
             self.id      = self.options.id;
             self.fields  = self.options.fields || {};
             self.strict  = self.options.strict;
@@ -298,24 +298,24 @@ module.exports = require('./lib');
      *
      * @param {Object} target
      * @param {Object} fields
-     * @param {Object} [opt]
+     * @param {Object} [options]
      * @param {string} [name]
      * @returns {Object}
      */
-    exp = module.exports = function (target, fields, opt, name) {
+    exp = module.exports = function (target, fields, options, name) {
 
         // Checking
         if (!XP.isObject(fields)) { return target; }
 
         // Restricting
         XP.forOwn(target, function (val, key) {
-            if (opt.strict && !fields[key]) { delete target[key]; }
+            if (options.strict && !fields[key]) { delete target[key]; }
         });
 
         // Sanitizing
         XP.forOwn(fields, function (field, key) {
-            target[key] = exp.sanitizeStep(target[key], field, fields, opt, (name ? name + '.' : '') + key);
-            if (opt.useful && XP.isVoid(target[key])) { delete target[key]; }
+            target[key] = exp.sanitizeStep(target[key], field, fields, options, (name ? name + '.' : '') + key);
+            if (options.useful && XP.isVoid(target[key])) { delete target[key]; }
         });
 
         return target;
@@ -327,11 +327,11 @@ module.exports = require('./lib');
      * @param {*} step
      * @param {Object} [field]
      * @param {Object} [fields]
-     * @param {Object} [opt]
+     * @param {Object} [options]
      * @param {string} [name]
      * @returns {*}
      */
-    exp.sanitizeStep = function (step, field, fields, opt, name) {
+    exp.sanitizeStep = function (step, field, fields, options, name) {
 
         // Setting
         step = XP.isDefined(step) ? step : null;
@@ -347,11 +347,11 @@ module.exports = require('./lib');
             XP[field.map ? 'forOwn' : 'forEach'](step, function (value, index) {
                 step[index] = exp.sanitizeValue(value, field, index, name + '[' + index + ']');
                 if (XP.isObject(step[index]) && (field.fields || field.type === 'recursive')) {
-                    step[index] = exp(step[index], field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name + '[' + index + ']');
+                    step[index] = exp(step[index], field.fields || fields, XP.assign({}, options, {strict: field.strict}), name + '[' + index + ']');
                 }
             });
         } else if (XP.isObject(step) && (field.fields || field.type === 'recursive')) {
-            step = exp(step, field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name);
+            step = exp(step, field.fields || fields, XP.assign({}, options, {strict: field.strict}), name);
         }
 
         return step;
@@ -468,18 +468,18 @@ module.exports = require('./lib');
      *
      * @param {Object} target
      * @param {Object} fields
-     * @param {Object} [opt]
+     * @param {Object} [options]
      * @param {string} [name]
      * @returns {Object}
      */
-    exp = module.exports = function (target, fields, opt, name) {
+    exp = module.exports = function (target, fields, options, name) {
 
         // Checking
         if (!XP.isObject(fields)) { return target; }
 
         // Validating
         XP.forOwn(fields, function (field, key) {
-            exp.validateStep(target[key], field, fields, opt, (name ? name + '.' : '') + key);
+            exp.validateStep(target[key], field, fields, options, (name ? name + '.' : '') + key);
         });
 
         return target;
@@ -491,11 +491,11 @@ module.exports = require('./lib');
      * @param {*} step
      * @param {Object} [field]
      * @param {Object} [fields]
-     * @param {Object} [opt]
+     * @param {Object} [options]
      * @param {string} [name]
      * @returns {*}
      */
-    exp.validateStep = function (step, field, fields, opt, name) {
+    exp.validateStep = function (step, field, fields, options, name) {
 
         // Setting
         step = XP.isDefined(step) ? step : null;
@@ -511,11 +511,11 @@ module.exports = require('./lib');
             XP[field.map ? 'forOwn' : 'forEach'](step, function (value, index) {
                 exp.validateValue(value, field, index, name + '[' + index + ']');
                 if (XP.isObject(value) && (field.fields || field.type === 'recursive')) {
-                    exp(value, field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name + '[' + index + ']');
+                    exp(value, field.fields || fields, XP.assign({}, options, {strict: field.strict}), name + '[' + index + ']');
                 }
             });
         } else if (XP.isObject(step) && (field.fields || field.type === 'recursive')) {
-            exp(step, field.fields || fields, XP.assign({}, opt, {strict: field.strict}), name);
+            exp(step, field.fields || fields, XP.assign({}, options, {strict: field.strict}), name);
         }
 
         return step;
