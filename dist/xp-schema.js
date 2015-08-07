@@ -784,7 +784,7 @@ module.exports = require('./lib');
          * @param {string} [name]
          * @returns {boolean | Error|null}
          */
-        type: {options: XP.keys(exp.types), required: true, method: function (target, type, name) {
+        type: {attributes: {required: true}, options: XP.keys(exp.types), method: function (target, type, name) {
             return XP.has(exp.types, type || 'any') && !exp.types[type || 'any'](target) && !XP.isNull(target) ? new XP.ArgumentError(name, type || 'any') : null;
         }},
 
