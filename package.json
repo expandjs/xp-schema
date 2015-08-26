@@ -2,7 +2,7 @@
   "name": "xp-schema",
   "license": "BSD-3-Clause",
   "description": "This class is used to provide scheming functionalities, including sanitization and validation.",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "homepage": "https://github.com/ExpandJS/xp-schema",
   "author": "ExpandJS <dev@expandjs.com> (http://expandjs.com)",
   "contributors": [
@@ -15,7 +15,7 @@
     "url": "https://github.com/ExpandJS/xp-schema.git"
   },
   "dependencies": {
-    "expandjs": "^0.9.7"
+    "expandjs": "^0.9.8"
   },
   "scripts": {
     "build": "browserify index -i expandjs --standalone XPSchema > dist/xp-schema.js && npm run build:min",
