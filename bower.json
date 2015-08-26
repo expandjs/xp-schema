@@ -21,6 +21,7 @@
     "**/.*"
   ],
   "dependencies": {
-    "expandjs": "ExpandJS/expandjs#0.9.7"
+    "expandjs": "ExpandJS/expandjs#0.9.7",
+    "xp-emitter": "ExpandJS/xp-emitter#0.9.7"
   }
 }

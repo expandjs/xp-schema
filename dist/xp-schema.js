@@ -4,7 +4,274 @@
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
 module.exports = require('./lib');
-},{"./lib":4}],3:[function(require,module,exports){
+},{"./lib":3}],3:[function(require,module,exports){
+(function (global){
+/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
+
+/**
+ * @license
+ * Copyright (c) 2015 The ExpandJS authors. All rights reserved.
+ * This code may only be used under the BSD style license found at https://expandjs.github.io/LICENSE.txt
+ * The complete set of authors may be found at https://expandjs.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at https://expandjs.github.io/CONTRIBUTORS.txt
+ */
+(function (global) {
+    "use strict";
+
+    // Vars
+    var eventemitter3 = require('eventemitter3'),
+        XP            = global.XP || require('expandjs');
+
+    /*********************************************************************/
+
+    /**
+     * This class is used to provide event emitting functionalities.
+     *
+     * @class XPEmitter
+     * @description This class is used to provide event emitting functionalities
+     */
+    module.exports = new XP.Class('XPEmitter', {
+
+        // EXTENDS
+        extends: eventemitter3
+    });
+
+}(typeof window !== "undefined" ? window : global));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"eventemitter3":4,"expandjs":1}],4:[function(require,module,exports){
+'use strict';
+
+/**
+ * Representation of a single EventEmitter function.
+ *
+ * @param {Function} fn Event handler to be called.
+ * @param {Mixed} context Context for function execution.
+ * @param {Boolean} once Only emit once
+ * @api private
+ */
+function EE(fn, context, once) {
+  this.fn = fn;
+  this.context = context;
+  this.once = once || false;
+}
+
+/**
+ * Minimal EventEmitter interface that is molded against the Node.js
+ * EventEmitter interface.
+ *
+ * @constructor
+ * @api public
+ */
+function EventEmitter() { /* Nothing to set */ }
+
+/**
+ * Holds the assigned EventEmitters by name.
+ *
+ * @type {Object}
+ * @private
+ */
+EventEmitter.prototype._events = undefined;
+
+/**
+ * Return a list of assigned event listeners.
+ *
+ * @param {String} event The events that should be listed.
+ * @returns {Array}
+ * @api public
+ */
+EventEmitter.prototype.listeners = function listeners(event) {
+  if (!this._events || !this._events[event]) return [];
+  if (this._events[event].fn) return [this._events[event].fn];
+
+  for (var i = 0, l = this._events[event].length, ee = new Array(l); i < l; i++) {
+    ee[i] = this._events[event][i].fn;
+  }
+
+  return ee;
+};
+
+/**
+ * Emit an event to all registered event listeners.
+ *
+ * @param {String} event The name of the event.
+ * @returns {Boolean} Indication if we've emitted an event.
+ * @api public
+ */
+EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+  if (!this._events || !this._events[event]) return false;
+
+  var listeners = this._events[event]
+    , len = arguments.length
+    , args
+    , i;
+
+  if ('function' === typeof listeners.fn) {
+    if (listeners.once) this.removeListener(event, listeners.fn, true);
+
+    switch (len) {
+      case 1: return listeners.fn.call(listeners.context), true;
+      case 2: return listeners.fn.call(listeners.context, a1), true;
+      case 3: return listeners.fn.call(listeners.context, a1, a2), true;
+      case 4: return listeners.fn.call(listeners.context, a1, a2, a3), true;
+      case 5: return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+      case 6: return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+    }
+
+    for (i = 1, args = new Array(len -1); i < len; i++) {
+      args[i - 1] = arguments[i];
+    }
+
+    listeners.fn.apply(listeners.context, args);
+  } else {
+    var length = listeners.length
+      , j;
+
+    for (i = 0; i < length; i++) {
+      if (listeners[i].once) this.removeListener(event, listeners[i].fn, true);
+
+      switch (len) {
+        case 1: listeners[i].fn.call(listeners[i].context); break;
+        case 2: listeners[i].fn.call(listeners[i].context, a1); break;
+        case 3: listeners[i].fn.call(listeners[i].context, a1, a2); break;
+        default:
+          if (!args) for (j = 1, args = new Array(len -1); j < len; j++) {
+            args[j - 1] = arguments[j];
+          }
+
+          listeners[i].fn.apply(listeners[i].context, args);
+      }
+    }
+  }
+
+  return true;
+};
+
+/**
+ * Register a new EventListener for the given event.
+ *
+ * @param {String} event Name of the event.
+ * @param {Functon} fn Callback function.
+ * @param {Mixed} context The context of the function.
+ * @api public
+ */
+EventEmitter.prototype.on = function on(event, fn, context) {
+  var listener = new EE(fn, context || this);
+
+  if (!this._events) this._events = {};
+  if (!this._events[event]) this._events[event] = listener;
+  else {
+    if (!this._events[event].fn) this._events[event].push(listener);
+    else this._events[event] = [
+      this._events[event], listener
+    ];
+  }
+
+  return this;
+};
+
+/**
+ * Add an EventListener that's only called once.
+ *
+ * @param {String} event Name of the event.
+ * @param {Function} fn Callback function.
+ * @param {Mixed} context The context of the function.
+ * @api public
+ */
+EventEmitter.prototype.once = function once(event, fn, context) {
+  var listener = new EE(fn, context || this, true);
+
+  if (!this._events) this._events = {};
+  if (!this._events[event]) this._events[event] = listener;
+  else {
+    if (!this._events[event].fn) this._events[event].push(listener);
+    else this._events[event] = [
+      this._events[event], listener
+    ];
+  }
+
+  return this;
+};
+
+/**
+ * Remove event listeners.
+ *
+ * @param {String} event The event we want to remove.
+ * @param {Function} fn The listener that we need to find.
+ * @param {Boolean} once Only remove once listeners.
+ * @api public
+ */
+EventEmitter.prototype.removeListener = function removeListener(event, fn, once) {
+  if (!this._events || !this._events[event]) return this;
+
+  var listeners = this._events[event]
+    , events = [];
+
+  if (fn) {
+    if (listeners.fn && (listeners.fn !== fn || (once && !listeners.once))) {
+      events.push(listeners);
+    }
+    if (!listeners.fn) for (var i = 0, length = listeners.length; i < length; i++) {
+      if (listeners[i].fn !== fn || (once && !listeners[i].once)) {
+        events.push(listeners[i]);
+      }
+    }
+  }
+
+  //
+  // Reset the array, or remove it completely if we have no more listeners.
+  //
+  if (events.length) {
+    this._events[event] = events.length === 1 ? events[0] : events;
+  } else {
+    delete this._events[event];
+  }
+
+  return this;
+};
+
+/**
+ * Remove all listeners or only the listeners for the specified event.
+ *
+ * @param {String} event The event want to remove all listeners for.
+ * @api public
+ */
+EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+  if (!this._events) return this;
+
+  if (event) delete this._events[event];
+  else this._events = {};
+
+  return this;
+};
+
+//
+// Alias methods names because people roll like that.
+//
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+//
+// This function doesn't apply anymore.
+//
+EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
+  return this;
+};
+
+//
+// Expose the module.
+//
+EventEmitter.EventEmitter = EventEmitter;
+EventEmitter.EventEmitter2 = EventEmitter;
+EventEmitter.EventEmitter3 = EventEmitter;
+
+//
+// Expose the module.
+//
+module.exports = EventEmitter;
+
+},{}],5:[function(require,module,exports){
+arguments[4][2][0].apply(exports,arguments)
+},{"./lib":7,"dup":2}],6:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -45,7 +312,7 @@ module.exports = require('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],4:[function(require,module,exports){
+},{"expandjs":1}],7:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -64,6 +331,7 @@ module.exports = require('./lib');
         sanitize   = require('./sanitize'),
         validate   = require('./validate'),
         XP         = global.XP || require('expandjs'),
+        XPEmitter = global.XPEmitter || require('xp-emitter'),
 
         filterFn   = function (item) { return XP.has(item, 'input') || XP.has(item, 'options'); },
         mapFn      = function (item, handle) { item = XP.assign({handle: handle}, item); XP.withdraw(item, 'method'); return item; },
@@ -79,8 +347,12 @@ module.exports = require('./lib');
      *
      * @class XPSchema
      * @description This class is used to provide scheming functionalities, including sanitization and validation
+     * @extends XPEmitter
      */
     module.exports = new XP.Class('XPSchema', {
+
+        // EXTENDS
+        extends: XPEmitter,
 
         // OPTIONS
         options: {
@@ -105,6 +377,9 @@ module.exports = require('./lib');
             // Vars
             var self = this;
 
+            // Super
+            XPEmitter.call(self);
+
             // Setting
             self.options = options;
             self.id      = self.options.id;
@@ -127,7 +402,7 @@ module.exports = require('./lib');
             promise: true,
             value: function (target, resolver) {
                 var self = this;
-                XP.attempt(function (next) { next(null, filter(self.ensure(target, 'target'), self.fields, self.options)); }, resolver);
+                XP.attempt(function (next) { next(null, filter(self._ensure(target, 'target'), self.fields, self.options)); }, resolver);
             }
         },
 
@@ -143,7 +418,7 @@ module.exports = require('./lib');
             promise: true,
             value: function (target, resolver) {
                 var self = this;
-                XP.attempt(function (next) { next(null, sanitize(self.ensure(target, 'target'), self.fields, self.options)); }, resolver);
+                XP.attempt(function (next) { next(null, sanitize(self._ensure(target, 'target'), self.fields, self.options)); }, resolver);
             }
         },
 
@@ -159,7 +434,7 @@ module.exports = require('./lib');
             promise: true,
             value: function (target, resolver) {
                 var self = this;
-                XP.attempt(function (next) { next(null, validate(self.ensure(target, 'target'), self.fields, self.options)); }, resolver);
+                XP.attempt(function (next) { next(null, validate(self._ensure(target, 'target'), self.fields, self.options)); }, resolver);
             }
         },
 
@@ -168,13 +443,13 @@ module.exports = require('./lib');
         /**
          * Used internally
          *
-         * @method ensure
+         * @method _ensure
          * @param {*} target
          * @param {string} [name]
          * @returns {*}
          * @private
          */
-        ensure: {
+        _ensure: {
             enumerable: false,
             value: function (target, name) {
                 var self = this;
@@ -273,7 +548,7 @@ module.exports = require('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./filter":3,"./sanitize":5,"./validate":6,"expandjs":1}],5:[function(require,module,exports){
+},{"./filter":6,"./sanitize":8,"./validate":9,"expandjs":1,"xp-emitter":2}],8:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -400,7 +675,6 @@ module.exports = require('./lib');
      *
      * @property sanitizers
      * @type Object
-     * @private
      */
     exp.sanitizers = {
 
@@ -410,7 +684,6 @@ module.exports = require('./lib');
          * @param {*} target
          * @param {boolean} bool
          * @returns {*}
-         * @private
          */
         map: {method: function (target, bool) {
             return (bool && XP.toObject(target, true)) || target;
@@ -422,7 +695,6 @@ module.exports = require('./lib');
          * @param {*} target
          * @param {boolean} bool
          * @returns {*}
-         * @private
          */
         multi: {method: function (target, bool) {
             return (bool && XP.toArray(target, true)) || target;
@@ -434,7 +706,6 @@ module.exports = require('./lib');
          * @param {*} target
          * @param {string} type
          * @returns {*}
-         * @private
          */
         type: {method: function (target, type) {
             return type === 'boolean' ? !!target : target;
@@ -443,7 +714,7 @@ module.exports = require('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],6:[function(require,module,exports){
+},{"expandjs":1}],9:[function(require,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -567,7 +838,6 @@ module.exports = require('./lib');
      *
      * @property patterns
      * @type Object
-     * @private
      */
     exp.patterns = {
         camelCase: XP.camelCaseRegex,
@@ -587,7 +857,6 @@ module.exports = require('./lib');
      *
      * @property types
      * @type Object
-     * @private
      */
     exp.types = {
         any: XP.isAny,
@@ -603,7 +872,6 @@ module.exports = require('./lib');
      *
      * @property validators
      * @type Object
-     * @private
      */
     exp.validators = {
 
@@ -614,7 +882,6 @@ module.exports = require('./lib');
          * @param {boolean} bool
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         multi: {input: 'checkbox', method: function (target, bool, name) {
             return XP.xor(bool, XP.isArray(target)) ? new XP.ValidationError(name || 'target', 'should be a multi') : null;
@@ -627,7 +894,6 @@ module.exports = require('./lib');
          * @param {boolean} bool
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         map: {input: 'checkbox', multi: true, method: function (target, bool, name) {
             return XP.xor(bool, XP.isObject(target)) ? new XP.ValidationError(name || 'target', 'should be an map') : null;
@@ -640,7 +906,6 @@ module.exports = require('./lib');
          * @param {number} max
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         exclusiveMaximum: {input: 'number', type: 'number', method: function (target, max, name) {
             return !XP.isFinite(target) || !XP.isFinite(max) ? false : (target >= max ? new XP.ValidationError(name || 'target', 'should be less than ' + max) : null);
@@ -653,7 +918,6 @@ module.exports = require('./lib');
          * @param {number} min
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         exclusiveMinimum: {input: 'number', type: 'number', method: function (target, min, name) {
             return !XP.isFinite(target) || !XP.isFinite(min) ? false : (target <= min ? new XP.ValidationError(name || 'target', 'should be greater than ' + min) : null);
@@ -666,7 +930,6 @@ module.exports = require('./lib');
          * @param {number} max
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         maximum: {input: 'number', type: 'number', method: function (target, max, name) {
             return !XP.isFinite(target) || !XP.isFinite(max) ? false : (target > max ? new XP.ValidationError(name || 'target', 'should be a maximum of ' + max) : null);
@@ -679,7 +942,6 @@ module.exports = require('./lib');
          * @param {number} max
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         maxItems: {attributes: {min: 1}, input: 'number', multi: true, method: function (target, max, name) {
             return !XP.isArray(target) || !XP.isFinite(max) || max < 1 ? false : (target.length > max ? new XP.ValidationError(name || 'target', 'should be a maximum of ' + max + ' items') : null);
@@ -692,7 +954,6 @@ module.exports = require('./lib');
          * @param {number} max
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         maxLength: {attributes: {min: 1}, input: 'number', type: 'string', method: function (target, max, name) {
             return !XP.isString(target) || !XP.isFinite(max) || max < 1 ? false : (target.length > max ? new XP.ValidationError(name || 'target', 'should be a maximum of ' + max + ' chars') : null);
@@ -717,7 +978,6 @@ module.exports = require('./lib');
          * @param {number} min
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         minItems: {attributes: {min: 1}, input: 'number', multi: true, method: function (target, min, name) {
             return !XP.isArray(target) || !XP.isFinite(min) ? false : (target.length < min ? new XP.ValidationError(name || 'target', 'should be a minimum of ' + min + ' items') : null);
@@ -742,7 +1002,6 @@ module.exports = require('./lib');
          * @param {number} val
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         multipleOf: {input: 'number', type: 'number', method: function (target, val, name) {
             return !XP.isFinite(target) || !XP.isFinite(val) ? false : (target % val !== 0 ? new XP.ValidationError(name || 'target', 'should be divisible by ' + val) : null);
@@ -755,7 +1014,6 @@ module.exports = require('./lib');
          * @param {string} pattern
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         pattern: {input: 'text', options: XP.keys(exp.patterns), type: 'string', method: function (target, pattern, name) {
             var reg = XP.isString(target) && XP.isString(pattern, true) && (exp.patterns[pattern] || pattern);
@@ -770,7 +1028,6 @@ module.exports = require('./lib');
          * @param {boolean} bool
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         required: {input: 'checkbox', method: function (target, bool, name) {
             return bool && XP.isEmpty(target) ? new XP.RequiredError(name || 'target') : null;
@@ -795,7 +1052,6 @@ module.exports = require('./lib');
          * @param {boolean} bool
          * @param {string} [name]
          * @returns {boolean | Error | null}
-         * @private
          */
         uniqueItems: {input: 'checkbox', multi: true, method: function (target, bool, name) {
             return !XP.isArray(target) ? false : (bool && !XP.isUniq(target) ? new XP.ValidationError(name || 'target', 'should not have duplicates') : null);
@@ -804,5 +1060,5 @@ module.exports = require('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}]},{},[2])(2)
+},{"expandjs":1}]},{},[5])(5)
 });
