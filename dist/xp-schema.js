@@ -626,9 +626,6 @@ arguments[4][2][0].apply(exports,arguments)
         // Setting
         value = XP.isDefined(value) ? value : null;
 
-        // Checking
-        if (!XP.isObject(field)) { return value; }
-
         // Sanitizing (type)
         if (field.map && XP.isVoid(index)) {
             value = exp.sanitizers.map.method(value, field.map, name);
@@ -640,7 +637,7 @@ arguments[4][2][0].apply(exports,arguments)
 
         // Sanitizing (other)
         XP.forOwn(field, function (val, key) {
-            if (exp.sanitizers[key] && !XP.includes(['map', 'multi', 'type'], key)) {
+            if (exp.sanitizers[key] && key !== 'map' && key !== 'multi' && key !== 'type') {
                 value = exp.sanitizers[key].method(value, field[key], name);
             }
         });
@@ -666,7 +663,7 @@ arguments[4][2][0].apply(exports,arguments)
          * @returns {*}
          */
         map: {method: function (target, bool) {
-            return (bool && XP.toObject(target, true)) || target;
+            return XP.isVoid(target) && bool ? {} : target;
         }},
 
         /**
@@ -677,7 +674,7 @@ arguments[4][2][0].apply(exports,arguments)
          * @returns {*}
          */
         multi: {method: function (target, bool) {
-            return (bool && XP.toArray(target, true)) || target;
+            return XP.isVoid(target) && bool ? [] : target;
         }},
 
         /**
@@ -688,7 +685,7 @@ arguments[4][2][0].apply(exports,arguments)
          * @returns {*}
          */
         type: {method: function (target, type) {
-            return type === 'boolean' ? !!target : target;
+            return XP.isVoid(target) && type === 'boolean' ? false : target;
         }}
     };
 
@@ -786,9 +783,6 @@ arguments[4][2][0].apply(exports,arguments)
         // Setting
         value = XP.isDefined(value) ? value : null;
 
-        // Checking
-        if (!XP.isObject(field)) { return value; }
-
         // Validating (type)
         if (field.map && XP.isVoid(index)) {
             if (XP.isError(err = exp.validators.map.method(value, field.map, name))) { throw err; }
@@ -800,7 +794,7 @@ arguments[4][2][0].apply(exports,arguments)
 
         // Validating (other)
         XP.forOwn(field, function (val, key) {
-            if (exp.validators[key] && !XP.includes(['map', 'multi', 'type'], key)) {
+            if (exp.validators[key] && key !== 'map' && key !== 'multi' && key !== 'type') {
                 if (XP.isError(err = exp.validators[key].method(value, field[key], name))) { throw err; }
             }
         });
@@ -853,30 +847,6 @@ arguments[4][2][0].apply(exports,arguments)
     exp.validators = {
 
         /**
-         * Returns error if target is not array (based on bool)
-         *
-         * @param {*} target
-         * @param {boolean} bool
-         * @param {string} [name]
-         * @returns {boolean | Error | null}
-         */
-        multi: {input: 'checkbox', method: function (target, bool, name) {
-            return XP.xor(bool, XP.isArray(target)) ? new XP.ValidationError(name || 'target', 'should be a multi') : null;
-        }},
-
-        /**
-         * Returns error if target is not an map (based on bool)
-         *
-         * @param {*} target
-         * @param {boolean} bool
-         * @param {string} [name]
-         * @returns {boolean | Error | null}
-         */
-        map: {input: 'checkbox', multi: true, method: function (target, bool, name) {
-            return XP.xor(bool, XP.isObject(target)) ? new XP.ValidationError(name || 'target', 'should be an map') : null;
-        }},
-
-        /**
          * Returns error if target is gte than max
          *
          * @param {number} target
@@ -898,6 +868,18 @@ arguments[4][2][0].apply(exports,arguments)
          */
         exclusiveMinimum: {input: 'number', type: 'number', method: function (target, min, name) {
             return !XP.isFinite(target) || !XP.isFinite(min) ? false : (target <= min ? new XP.ValidationError(name || 'target', 'should be greater than ' + min) : null);
+        }},
+
+        /**
+         * Returns error if target is not an map (based on bool)
+         *
+         * @param {*} target
+         * @param {boolean} bool
+         * @param {string} [name]
+         * @returns {boolean | Error | null}
+         */
+        map: {input: 'checkbox', multi: true, method: function (target, bool, name) {
+            return XP.xor(bool, XP.isObject(target)) ? new XP.ValidationError(name || 'target', 'should be an map') : null;
         }},
 
         /**
@@ -970,6 +952,18 @@ arguments[4][2][0].apply(exports,arguments)
          */
         minLength: {attributes: {min: 1}, input: 'number', type: 'string', method: function (target, min, name) {
             return !XP.isString(target) || !XP.isFinite(min) ? false : (target.length < min ? new XP.ValidationError(name || 'target', 'should be a minimum of ' + min + ' chars') : null);
+        }},
+
+        /**
+         * Returns error if target is not array (based on bool)
+         *
+         * @param {*} target
+         * @param {boolean} bool
+         * @param {string} [name]
+         * @returns {boolean | Error | null}
+         */
+        multi: {input: 'checkbox', method: function (target, bool, name) {
+            return XP.xor(bool, XP.isArray(target)) ? new XP.ValidationError(name || 'target', 'should be a multi') : null;
         }},
 
         /**
