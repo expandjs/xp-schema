@@ -15,11 +15,12 @@
     "url": "https://github.com/ExpandJS/xp-schema.git"
   },
   "dependencies": {
-    "expandjs": "^0.9.8"
+    "expandjs": "^0.9.8",
+    "xp-emitter": "^0.9.8"
   },
   "scripts": {
-    "build": "browserify index -i expandjs --standalone XPSchema > dist/xp-schema.js && npm run build:min",
-    "build:min": "browserify -d index -i expandjs --standalone XPSchema -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] > dist/xp-schema.min.js"
+    "build": "browserify index -i expandjs -i xp-emitter --standalone XPSchema > dist/xp-schema.js && npm run build:min",
+    "build:min": "browserify -d index -i expandjs -i xp-emitter --standalone XPSchema -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] > dist/xp-schema.min.js"
   },
   "keywords": [
       "expandjs",
