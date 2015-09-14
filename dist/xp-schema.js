@@ -515,7 +515,6 @@ module.exports = require('./lib');
         kebabCase: XP.kebabCaseRegex,
         keyCase: XP.keyCaseRegex,
         lowerCase: XP.lowerCaseRegex,
-        readable: XP.readableRegex,
         snakeCase: XP.snakeCaseRegex,
         startCase: XP.startCaseRegex,
         trim: XP.trimRegex,
