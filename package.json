@@ -2,7 +2,7 @@
   "name": "xp-schema",
   "license": "BSD-3-Clause",
   "description": "This class is used to provide scheming functionalities, including sanitization and validation.",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "homepage": "https://github.com/ExpandJS/xp-schema",
   "author": "ExpandJS <dev@expandjs.com> (http://expandjs.com)",
   "contributors": [
@@ -15,12 +15,17 @@
     "url": "https://github.com/ExpandJS/xp-schema.git"
   },
   "dependencies": {
-    "expandjs": "^0.9.9",
-    "xp-emitter": "^0.9.9"
+    "expandjs": "^0.9.10",
+    "xp-emitter": "^0.9.10"
+  },
+  "devDependencies": {
+    "browserify": "*",
+    "derequire": "*",
+    "minifyify": "*"
   },
   "scripts": {
-    "build": "browserify index -i expandjs -i xp-emitter --standalone XPSchema > dist/xp-schema.js && npm run build:min",
-    "build:min": "browserify -d index -i expandjs -i xp-emitter --standalone XPSchema -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] > dist/xp-schema.min.js"
+    "build": "browserify index -i expandjs -i xp-emitter | derequire > dist/xp-schema.js && npm run build:min",
+    "build:min": "browserify -d index -i expandjs -i xp-emitter -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] | derequire > dist/xp-schema.min.js"
   },
   "keywords": [
       "expandjs",

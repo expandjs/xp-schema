@@ -1,10 +1,10 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.XPSchema = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 
-},{}],2:[function(require,module,exports){
+},{}],2:[function(_dereq_,module,exports){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
-module.exports = require('./lib');
-},{"./lib":4}],3:[function(require,module,exports){
+module.exports = _dereq_('./lib');
+},{"./lib":4}],3:[function(_dereq_,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -19,7 +19,7 @@ module.exports = require('./lib');
     "use strict";
 
     // Vars
-    var XP = global.XP || require('expandjs');
+    var XP = global.XP || _dereq_('expandjs');
 
     /*********************************************************************/
 
@@ -42,7 +42,7 @@ module.exports = require('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],4:[function(require,module,exports){
+},{"expandjs":1}],4:[function(_dereq_,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -57,12 +57,12 @@ module.exports = require('./lib');
     "use strict";
 
     // Vars
-    var XP         = global.XP || require('expandjs'),
-        XPEmitter  = global.XPEmitter || require('xp-emitter'),
+    var XP         = global.XP || _dereq_('expandjs'),
+        XPEmitter  = global.XPEmitter || _dereq_('xp-emitter'),
 
-        filter     = require('./filter'),
-        sanitize   = require('./sanitize'),
-        validate   = require('./validate'),
+        filter     = _dereq_('./filter'),
+        sanitize   = _dereq_('./sanitize'),
+        validate   = _dereq_('./validate'),
 
         filterer   = function (item) { return XP.has(item, 'input') || XP.has(item, 'options'); },
         mapper     = function (item, handle) { item = XP.assign({handle: handle}, item); XP.withdraw(item, 'method'); return item; },
@@ -80,7 +80,7 @@ module.exports = require('./lib');
      * @description This class is used to provide scheming functionalities, including sanitization and validation
      * @extends XPEmitter
      */
-    module.exports = new XP.Class('XPSchema', {
+    module.exports = global.XPSchema = new XP.Class('XPSchema', {
 
         // EXTENDS
         extends: XPEmitter,
@@ -115,17 +115,17 @@ module.exports = require('./lib');
          * Filters the target.
          *
          * @method filter
-         * @param {Object} target
+         * @param {Object} data
          * @param {Function} [resolver]
          * @returns {Promise}
          */
         filter: {
             promise: true,
-            value: function (target, resolver) {
+            value: function (data, resolver) {
                 var self = this;
                 XP.waterfall([
-                    function (next) { next((!XP.isObject(target) && new XP.ValidationError('target', 'Object')) || null); },
-                    function (next) { XP.attempt(function (next) { next(null, filter(target, self.fields, self.options)); }, next); }
+                    function (next) { next((!XP.isObject(data) && new XP.ValidationError('data', 'Object', 400)) || null); },
+                    function (next) { XP.attempt(function (next) { next(null, filter(data, self.fields, self.options)); }, next); }
                 ], resolver);
             }
         },
@@ -134,17 +134,17 @@ module.exports = require('./lib');
          * Sanitizes the target.
          *
          * @method sanitize
-         * @param {Object} target
+         * @param {Object} data
          * @param {Function} [resolver]
          * @returns {Promise}
          */
         sanitize: {
             promise: true,
-            value: function (target, resolver) {
+            value: function (data, resolver) {
                 var self = this;
                 XP.waterfall([
-                    function (next) { next((!XP.isObject(target) && new XP.ValidationError('target', 'Object')) || null); },
-                    function (next) { XP.attempt(function (next) { next(null, sanitize(target, self.fields, self.options)); }, next); }
+                    function (next) { next((!XP.isObject(data) && new XP.ValidationError('data', 'Object', 400)) || null); },
+                    function (next) { XP.attempt(function (next) { next(null, sanitize(data, self.fields, self.options)); }, next); }
                 ], resolver);
             }
         },
@@ -153,17 +153,17 @@ module.exports = require('./lib');
          * Validates the target.
          *
          * @method validate
-         * @param {Object} target
+         * @param {Object} data
          * @param {Function} [resolver]
          * @returns {Promise}
          */
         validate: {
             promise: true,
-            value: function (target, resolver) {
+            value: function (data, resolver) {
                 var self = this;
                 XP.waterfall([
-                    function (next) { next((!XP.isObject(target) && new XP.ValidationError('target', 'Object')) || null); },
-                    function (next) { XP.attempt(function (next) { next(null, validate(target, self.fields, self.options)); }, next); }
+                    function (next) { next((!XP.isObject(data) && new XP.ValidationError('data', 'Object', 400)) || null); },
+                    function (next) { XP.attempt(function (next) { next(null, validate(data, self.fields, self.options)); }, next); }
                 ], resolver);
             }
         },
@@ -177,7 +177,7 @@ module.exports = require('./lib');
          * @type Object
          */
         fields: {
-            validate: function (val) { return XP.isObject(val); }
+            validate: function (val) { return !XP.isObject(val) && 'Object'; }
         },
 
         /**
@@ -242,7 +242,7 @@ module.exports = require('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./filter":3,"./sanitize":5,"./validate":6,"expandjs":1,"xp-emitter":1}],5:[function(require,module,exports){
+},{"./filter":3,"./sanitize":5,"./validate":6,"expandjs":1,"xp-emitter":1}],5:[function(_dereq_,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -258,7 +258,7 @@ module.exports = require('./lib');
 
     // Vars
     var exp = module.exports,
-        XP  = global.XP || require('expandjs');
+        XP  = global.XP || _dereq_('expandjs');
 
     /*********************************************************************/
 
@@ -396,7 +396,7 @@ module.exports = require('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],6:[function(require,module,exports){
+},{"expandjs":1}],6:[function(_dereq_,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -412,7 +412,7 @@ module.exports = require('./lib');
 
     // Vars
     var exp = module.exports,
-        XP  = global.XP || require('expandjs');
+        XP  = global.XP || _dereq_('expandjs');
 
     /*********************************************************************/
 
@@ -555,7 +555,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         exclusiveMaximum: {input: 'number', type: 'number', method: function (target, max, name) {
-            return !XP.isFinite(target) || !XP.isFinite(max) ? false : (target >= max ? new XP.ValidationError(name || 'target', 'less than ' + max) : null);
+            return !XP.isFinite(target) || !XP.isFinite(max) ? false : (target >= max ? new XP.ValidationError(name || 'target', 'less than ' + max, 400) : null);
         }},
 
         /**
@@ -567,7 +567,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         exclusiveMinimum: {input: 'number', type: 'number', method: function (target, min, name) {
-            return !XP.isFinite(target) || !XP.isFinite(min) ? false : (target <= min ? new XP.ValidationError(name || 'target', 'greater than ' + min) : null);
+            return !XP.isFinite(target) || !XP.isFinite(min) ? false : (target <= min ? new XP.ValidationError(name || 'target', 'greater than ' + min, 400) : null);
         }},
 
         /**
@@ -579,7 +579,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         map: {input: 'checkbox', multi: true, method: function (target, bool, name) {
-            return XP.xor(bool, XP.isObject(target)) ? new XP.ValidationError(name || 'target', 'a map') : null;
+            return XP.xor(bool, XP.isObject(target)) ? new XP.ValidationError(name || 'target', 'a map', 400) : null;
         }},
 
         /**
@@ -591,7 +591,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         maximum: {input: 'number', type: 'number', method: function (target, max, name) {
-            return !XP.isFinite(target) || !XP.isFinite(max) ? false : (target > max ? new XP.ValidationError(name || 'target', 'a maximum of ' + max) : null);
+            return !XP.isFinite(target) || !XP.isFinite(max) ? false : (target > max ? new XP.ValidationError(name || 'target', 'a maximum of ' + max, 400) : null);
         }},
 
         /**
@@ -603,7 +603,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         maxItems: {attributes: {min: 1}, input: 'number', multi: true, method: function (target, max, name) {
-            return !XP.isArray(target) || !XP.isFinite(max) || max < 1 ? false : (target.length > max ? new XP.ValidationError(name || 'target', 'a maximum of ' + max + ' items') : null);
+            return !XP.isArray(target) || !XP.isFinite(max) || max < 1 ? false : (target.length > max ? new XP.ValidationError(name || 'target', 'a maximum of ' + max + ' items', 400) : null);
         }},
 
         /**
@@ -615,7 +615,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         maxLength: {attributes: {min: 1}, input: 'number', type: 'string', method: function (target, max, name) {
-            return !XP.isString(target) || !XP.isFinite(max) || max < 1 ? false : (target.length > max ? new XP.ValidationError(name || 'target', 'a maximum of ' + max + ' chars') : null);
+            return !XP.isString(target) || !XP.isFinite(max) || max < 1 ? false : (target.length > max ? new XP.ValidationError(name || 'target', 'a maximum of ' + max + ' chars', 400) : null);
         }},
 
         /**
@@ -627,7 +627,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error|null}
          */
         minimum: {input: 'number', type: 'number', method: function (target, min, name) {
-            return !XP.isFinite(target) || !XP.isFinite(min) ? false : (target < min ? new XP.ValidationError(name || 'target', 'a minimum of ' + min) : null);
+            return !XP.isFinite(target) || !XP.isFinite(min) ? false : (target < min ? new XP.ValidationError(name || 'target', 'a minimum of ' + min, 400) : null);
         }},
 
         /**
@@ -639,7 +639,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         minItems: {attributes: {min: 1}, input: 'number', multi: true, method: function (target, min, name) {
-            return !XP.isArray(target) || !XP.isFinite(min) ? false : (target.length < min ? new XP.ValidationError(name || 'target', 'a minimum of ' + min + ' items') : null);
+            return !XP.isArray(target) || !XP.isFinite(min) ? false : (target.length < min ? new XP.ValidationError(name || 'target', 'a minimum of ' + min + ' items', 400) : null);
         }},
 
         /**
@@ -651,7 +651,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error|null}
          */
         minLength: {attributes: {min: 1}, input: 'number', type: 'string', method: function (target, min, name) {
-            return !XP.isString(target) || !XP.isFinite(min) ? false : (target.length < min ? new XP.ValidationError(name || 'target', 'a minimum of ' + min + ' chars') : null);
+            return !XP.isString(target) || !XP.isFinite(min) ? false : (target.length < min ? new XP.ValidationError(name || 'target', 'a minimum of ' + min + ' chars', 400) : null);
         }},
 
         /**
@@ -663,7 +663,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         multi: {input: 'checkbox', method: function (target, bool, name) {
-            return XP.xor(bool, XP.isArray(target)) ? new XP.ValidationError(name || 'target', 'multi') : null;
+            return XP.xor(bool, XP.isArray(target)) ? new XP.ValidationError(name || 'target', 'multi', 400) : null;
         }},
 
         /**
@@ -675,7 +675,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         multipleOf: {input: 'number', type: 'number', method: function (target, val, name) {
-            return !XP.isFinite(target) || !XP.isFinite(val) ? false : (target % val !== 0 ? new XP.ValidationError(name || 'target', 'divisible by ' + val) : null);
+            return !XP.isFinite(target) || !XP.isFinite(val) ? false : (target % val !== 0 ? new XP.ValidationError(name || 'target', 'divisible by ' + val, 400) : null);
         }},
 
         /**
@@ -689,7 +689,7 @@ module.exports = require('./lib');
         pattern: {input: 'text', options: XP.keys(exp.patterns), type: 'string', method: function (target, pattern, name) {
             var reg = XP.isString(target) && XP.isString(pattern, true) && (exp.patterns[pattern] || pattern);
             if (XP.isString(reg) && XP.isRegExp(reg = XP.toRegExp(pattern))) { exp.patterns[pattern] = reg; }
-            return !reg ? false : (!reg.test(target) ? new XP.InvalidError(name || 'target') : null);
+            return !reg ? false : (!reg.test(target) ? new XP.InvalidError(name || 'target', 400) : null);
         }},
 
         /**
@@ -701,7 +701,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         required: {input: 'checkbox', method: function (target, bool, name) {
-            return bool && XP.isEmpty(target) ? new XP.RequiredError(name || 'target') : null;
+            return bool && XP.isEmpty(target) ? new XP.RequiredError(name || 'target', 400) : null;
         }},
 
         /**
@@ -713,7 +713,7 @@ module.exports = require('./lib');
          * @returns {boolean | Error|null}
          */
         type: {attributes: {required: true}, options: XP.keys(exp.types), method: function (target, type, name) {
-            return XP.has(exp.types, type || 'any') && !exp.types[type || 'any'](target) && !XP.isNull(target) ? new XP.ValidationError(name || 'target', type || 'any') : null;
+            return XP.has(exp.types, type || 'any') && !exp.types[type || 'any'](target) && !XP.isNull(target) ? new XP.ValidationError(name || 'target', type || 'any', 400) : null;
         }},
 
         /**
@@ -725,11 +725,10 @@ module.exports = require('./lib');
          * @returns {boolean | Error | null}
          */
         uniqueItems: {input: 'checkbox', multi: true, method: function (target, bool, name) {
-            return !XP.isArray(target) ? false : (bool && !XP.isUniq(target) ? new XP.ValidationError(name || 'target', 'should not have duplicates') : null);
+            return !XP.isArray(target) ? false : (bool && !XP.isUniq(target) ? new XP.ValidationError(name || 'target', 'should not have duplicates', 400) : null);
         }}
     };
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}]},{},[2])(2)
-});
+},{"expandjs":1}]},{},[2]);
