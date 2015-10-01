@@ -34,7 +34,8 @@ module.exports = _dereq_('./lib');
 
         // Filtering
         XP.forOwn(data, function (val, key) {
-            if (fields[key] && fields[key].immutable) { delete data[key]; }
+            if (!fields[key] || !fields[key].immutable) { return; }
+            delete data[key];
         });
 
         return data;
@@ -297,7 +298,8 @@ module.exports = _dereq_('./lib');
 
         // Filtering
         XP.forOwn(fields, function (field, key) {
-            if (XP.isDefined(fields.value) && XP.isVoid(data[key])) { data[key] = field.value; }
+            if (!XP.isDefined(fields.value) || !XP.isVoid(data[key])) { return; }
+            data[key] = XP.isFunction(fields.value) ? field.value(data) : field.value;
         });
 
         return data;
