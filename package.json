@@ -24,8 +24,9 @@
     "minifyify": "*"
   },
   "scripts": {
-    "build": "browserify index -i expandjs -i xp-emitter | derequire > dist/xp-schema.js && npm run build:min",
-    "build:min": "browserify -d index -i expandjs -i xp-emitter -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] | derequire > dist/xp-schema.min.js"
+    "build": "npm run build:browserify && npm run build:minify && node noconflict",
+    "build:browserify": "browserify index -i expandjs -i xp-emitter --standalone XPSchema | derequire > dist/xp-schema.js",
+    "build:minify": "browserify -d index -i expandjs -i xp-emitter --standalone XPSchema -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] | derequire > dist/xp-schema.min.js"
   },
   "keywords": [
       "expandjs",
