@@ -4,46 +4,7 @@
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
 module.exports = _dereq_('./lib');
-},{"./lib":4}],3:[function(_dereq_,module,exports){
-(function (global){
-/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
-
-/**
- * @license
- * Copyright (c) 2015 The ExpandJS authors. All rights reserved.
- * This code may only be used under the BSD style license found at https://expandjs.github.io/LICENSE.txt
- * The complete set of authors may be found at https://expandjs.github.io/AUTHORS.txt
- * The complete set of contributors may be found at https://expandjs.github.io/CONTRIBUTORS.txt
- */
-(function (global) {
-    "use strict";
-
-    // Vars
-    var XP = global.XP || _dereq_('expandjs');
-
-    /*********************************************************************/
-
-    /**
-     * Filters the data
-     *
-     * @param {Object} data
-     * @param {Object} fields
-     * @returns {Object}
-     */
-    module.exports = function (data, fields) {
-
-        // Filtering
-        XP.forOwn(data, function (val, key) {
-            if (!fields[key] || !fields[key].immutable) { return; }
-            delete data[key];
-        });
-
-        return data;
-    };
-
-}(typeof window !== "undefined" ? window : global));
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],4:[function(_dereq_,module,exports){
+},{"./lib":3}],3:[function(_dereq_,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -61,8 +22,6 @@ module.exports = _dereq_('./lib');
     var XP         = global.XP || _dereq_('expandjs'),
         XPEmitter  = global.XPEmitter || _dereq_('xp-emitter'),
 
-        filter     = _dereq_('./filter'),
-        prepare    = _dereq_('./prepare'),
         sanitize   = _dereq_('./sanitize'),
         validate   = _dereq_('./validate'),
 
@@ -76,10 +35,10 @@ module.exports = _dereq_('./lib');
     /*********************************************************************/
 
     /**
-     * This class is used to provide scheming functionalities, including sanitization and validation.
+     * This class is used to provide sanitization and validation functionalities.
      *
      * @class XPSchema
-     * @description This class is used to provide scheming functionalities, including sanitization and validation
+     * @description This class is used to provide sanitization and validation functionalities
      * @extends XPEmitter
      */
     module.exports = global.XPSchema = new XP.Class('XPSchema', {
@@ -114,44 +73,6 @@ module.exports = _dereq_('./lib');
         /*********************************************************************/
 
         /**
-         * Filters the data.
-         *
-         * @method filter
-         * @param {Object} data
-         * @param {Function} [resolver]
-         * @returns {Promise}
-         */
-        filter: {
-            promise: true,
-            value: function (data, resolver) {
-                var self = this;
-                XP.waterfall([
-                    function (next) { self._assert({data: data}, next); }, // asserting
-                    function (next) { XP.attempt(function (next) { next(null, filter(data, self.fields)); }, next); } // filtering
-                ], resolver);
-            }
-        },
-
-        /**
-         * Prepares the data.
-         *
-         * @method filter
-         * @param {Object} data
-         * @param {Function} [resolver]
-         * @returns {Promise}
-         */
-        prepare: {
-            promise: true,
-            value: function (data, resolver) {
-                var self = this;
-                XP.waterfall([
-                    function (next) { self._assert({data: data}, next); }, // asserting
-                    function (next) { XP.attempt(function (next) { next(null, prepare(data, self.fields)); }, next); } // preparing
-                ], resolver);
-            }
-        },
-
-        /**
          * Sanitizes the data.
          *
          * @method sanitize
@@ -164,8 +85,8 @@ module.exports = _dereq_('./lib');
             value: function (data, resolver) {
                 var self = this;
                 XP.waterfall([
-                    function (next) { self._assert({data: data}, next); }, // asserting
-                    function (next) { XP.attempt(function (next) { next(null, sanitize(data, self.fields, self.options)); }, next); } // sanitizing
+                    function (next) { next((!XP.isObject(data) && new XP.ValidationError('data', 'Object', 400)) || null); }, // asserting
+                    function (next) { next(null, sanitize(data, self.fields, self.options)); } // sanitizing
                 ], resolver);
             }
         },
@@ -183,8 +104,9 @@ module.exports = _dereq_('./lib');
             value: function (data, resolver) {
                 var self = this;
                 XP.waterfall([
-                    function (next) { self._assert({data: data}, next); }, // asserting
-                    function (next) { XP.attempt(function (next) { next(null, validate(data, self.fields, self.options)); }, next); } // validating
+                    function (next) { next((!XP.isObject(data) && new XP.ValidationError('data', 'Object', 400)) || null); }, // asserting
+                    function (next) { next(validate(data, self.fields, self.options)); }, // validating
+                    function (next) { next(null, data); }
                 ], resolver);
             }
         },
@@ -258,56 +180,12 @@ module.exports = _dereq_('./lib');
         validators: {
             'static': true,
             get: function () { return validators; }
-        },
-
-        /*********************************************************************/
-
-        // ASSERTS
-        _assertData: {enumerable: false, value: function (val) { return !XP.isObject(val) && new XP.ValidationError('data', 'Object', 400); }}
+        }
     });
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./filter":3,"./prepare":5,"./sanitize":6,"./validate":7,"expandjs":1,"xp-emitter":1}],5:[function(_dereq_,module,exports){
-(function (global){
-/*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
-
-/**
- * @license
- * Copyright (c) 2015 The ExpandJS authors. All rights reserved.
- * This code may only be used under the BSD style license found at https://expandjs.github.io/LICENSE.txt
- * The complete set of authors may be found at https://expandjs.github.io/AUTHORS.txt
- * The complete set of contributors may be found at https://expandjs.github.io/CONTRIBUTORS.txt
- */
-(function (global) {
-    "use strict";
-
-    // Vars
-    var XP = global.XP || _dereq_('expandjs');
-
-    /*********************************************************************/
-
-    /**
-     * Filters the data
-     *
-     * @param {Object} data
-     * @param {Object} fields
-     * @returns {Object}
-     */
-    module.exports = function (data, fields) {
-
-        // Filtering
-        XP.forOwn(fields, function (field, key) {
-            if (!XP.isDefined(fields.value) || !XP.isVoid(data[key])) { return; }
-            data[key] = XP.isFunction(fields.value) ? field.value(data) : field.value;
-        });
-
-        return data;
-    };
-
-}(typeof window !== "undefined" ? window : global));
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],6:[function(_dereq_,module,exports){
+},{"./sanitize":4,"./validate":5,"expandjs":1,"xp-emitter":1}],4:[function(_dereq_,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -368,7 +246,7 @@ module.exports = _dereq_('./lib');
         step = XP.isDefined(step) ? step : null;
 
         // Checking
-        if (!XP.isObject(field)) { return step; }
+        if (XP.isString(field, true)) { field = {type: field}; } else if (!XP.isObject(field)) { return step; }
 
         // Sanitizing (step)
         step = exp.sanitizeValue(step, field, null, name);
@@ -461,7 +339,7 @@ module.exports = _dereq_('./lib');
 
 }(typeof window !== "undefined" ? window : global));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"expandjs":1}],7:[function(_dereq_,module,exports){
+},{"expandjs":1}],5:[function(_dereq_,module,exports){
 (function (global){
 /*jslint browser: true, devel: true, node: true, ass: true, nomen: true, unparam: true, indent: 4 */
 
@@ -492,12 +370,19 @@ module.exports = _dereq_('./lib');
      */
     exp = module.exports = function (data, fields, options, name) {
 
-        // Validating
-        XP.forOwn(fields, function (field, key) {
-            exp.validateStep(data[key], field, fields, options, (name ? name + '.' : '') + key);
-        });
+        // Trying
+        try {
 
-        return data;
+            // Validating
+            XP.forOwn(fields, function (field, key) {
+                exp.validateStep(data[key], field, fields, options, (name ? name + '.' : '') + key);
+            });
+
+            return null;
+        }
+
+        // Catching
+        catch (error) { return error; }
     };
 
     /**
@@ -508,7 +393,6 @@ module.exports = _dereq_('./lib');
      * @param {Object} [fields]
      * @param {Object} [options]
      * @param {string} [name]
-     * @returns {*}
      */
     exp.validateStep = function (step, field, fields, options, name) {
 
@@ -516,7 +400,7 @@ module.exports = _dereq_('./lib');
         step = XP.isDefined(step) ? step : null;
 
         // Checking
-        if (!XP.isObject(field)) { return step; }
+        if (XP.isString(field, true)) { field = {type: field}; } else if (!XP.isObject(field)) { return; }
 
         // Validating (step)
         exp.validateValue(step, field, null, name);
@@ -532,8 +416,6 @@ module.exports = _dereq_('./lib');
         } else if (XP.isObject(step) && (field.fields || field.type === 'recursive')) {
             exp(step, field.fields || fields, XP.assign({}, options, {strict: field.strict}), name);
         }
-
-        return step;
     };
 
     /**
@@ -543,7 +425,6 @@ module.exports = _dereq_('./lib');
      * @param {Object} [field]
      * @param {number | string} [index]
      * @param {string} [name]
-     * @returns {*}
      */
     exp.validateValue = function (value, field, index, name) {
 
@@ -562,8 +443,6 @@ module.exports = _dereq_('./lib');
             if (!exp.validators[key] || key === 'map' || key === 'multi' || key === 'type') { return; }
             if (err = exp.validators[key].method(value, sub, name)) { throw err; }
         });
-
-        return value;
     };
 
     /*********************************************************************/
