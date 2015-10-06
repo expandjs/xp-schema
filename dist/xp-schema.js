@@ -35,10 +35,10 @@ module.exports = _dereq_('./lib');
     /*********************************************************************/
 
     /**
-     * This class is used to provide sanitization and validation functionalities.
+     * This class is used to provide scheming functionalities.
      *
      * @class XPSchema
-     * @description This class is used to provide sanitization and validation functionalities
+     * @description This class is used to provide scheming functionalities
      * @extends XPEmitter
      */
     module.exports = global.XPSchema = new XP.Class('XPSchema', {
@@ -73,7 +73,69 @@ module.exports = _dereq_('./lib');
         /*********************************************************************/
 
         /**
-         * Sanitizes the data.
+         * TODO DOC
+         *
+         * @method filter
+         * @param {Object} data
+         * @param {Function} [resolver]
+         * @returns {Promise}
+         */
+        filter: {
+            promise: true,
+            value: function (data, resolver) {
+                var self = this;
+                XP.waterfall([
+                    function (next) { self._assert({data: data}, next); }, // asserting
+                    function (next) { next(null, XP.forOwn(self.fields, function (field, key) { if (field.reserved) { delete data[key]; } })); }, // filtering
+                    function (next) { next(null, data); } // resolving
+                ], resolver);
+            }
+        },
+
+        /**
+         * TODO DOC
+         *
+         * @method merge
+         * @param {Object} data
+         * @param {Object} [item]
+         * @param {boolean} [reserved = false]
+         * @param {Function} [resolver]
+         * @returns {Promise}
+         */
+        merge: {
+            promise: true,
+            value: function (data, item, reserved, resolver) {
+                var self = this;
+                XP.waterfall([
+                    function (next) { self._assert({data: data, item: item}, next); }, // asserting
+                    function (next) { next(null, XP.forOwn(item || {}, function (value, key) { if (!XP.isDefined(data[key]) && (!reserved || (self.fields[key] && self.fields[key].reserved))) { data[key] = item[key]; } })); }, // merging
+                    function (next) { next(null, data); } // resolving
+                ], resolver);
+            }
+        },
+
+        /**
+         * TODO DOC
+         *
+         * @method prepare
+         * @param {Object} data
+         * @param {Function} [resolver]
+         * @returns {Promise}
+         */
+        prepare: {
+            promise: true,
+            value: function (data, resolver) {
+                var self = this;
+                XP.waterfall([
+                    function (next) { self._assert({data: data}, next); }, // asserting
+                    function (next) { next(null, XP.forOwn(self.fields, function (field, key) { if (XP.isDefined(field.value) && XP.isVoid(data[key])) { data[key] = XP.isFunction(field.value) ? field.value() : field.value; } })); }, // preparing
+                    function (next) { next(null, data); } // resolving
+                ], resolver);
+            }
+        },
+
+        /**
+         * TODO DOC
          *
          * @method sanitize
          * @param {Object} data
@@ -85,28 +147,30 @@ module.exports = _dereq_('./lib');
             value: function (data, resolver) {
                 var self = this;
                 XP.waterfall([
-                    function (next) { next((!XP.isObject(data) && new XP.ValidationError('data', 'Object', 400)) || null); }, // asserting
-                    function (next) { next(null, sanitize(data, self.fields, self.options)); } // sanitizing
+                    function (next) { self._assert({data: data}, next); }, // asserting
+                    function (next) { next(null, sanitize(data, self.fields, self.options)); }, // sanitizing
+                    function (next) { next(null, data); } // resolving
                 ], resolver);
             }
         },
 
         /**
-         * Validates the data.
+         * TODO DOC
          *
          * @method validate
          * @param {Object} data
+         * @param {Object} [item]
          * @param {Function} [resolver]
          * @returns {Promise}
          */
         validate: {
             promise: true,
-            value: function (data, resolver) {
+            value: function (data, item, resolver) {
                 var self = this;
                 XP.waterfall([
-                    function (next) { next((!XP.isObject(data) && new XP.ValidationError('data', 'Object', 400)) || null); }, // asserting
-                    function (next) { next(validate(data, self.fields, self.options)); }, // validating
-                    function (next) { next(null, data); }
+                    function (next) { self._assert({data: data, item: item}, next); }, // asserting
+                    function (next) { next(validate(data, self.fields, item), null); }, // validating
+                    function (next) { next(null, data); } // resolving
                 ], resolver);
             }
         },
@@ -180,7 +244,13 @@ module.exports = _dereq_('./lib');
         validators: {
             'static': true,
             get: function () { return validators; }
-        }
+        },
+
+        /*********************************************************************/
+
+        // ASSERTS
+        _assertItem: {enumerable: false, value: function (val) { return !XP.isVoid(val) && !XP.isObject(val) && new XP.ValidationError('item', 'Object', 500); }},
+        _assertData: {enumerable: false, value: function (val) { return !XP.isObject(val) && new XP.ValidationError('data', 'Object', 400); }}
     });
 
 }(typeof window !== "undefined" ? window : global));
@@ -211,10 +281,9 @@ module.exports = _dereq_('./lib');
      * @param {Object} data
      * @param {Object} fields
      * @param {Object} [options]
-     * @param {string} [name]
      * @returns {Object}
      */
-    exp = module.exports = function (data, fields, options, name) {
+    exp = module.exports = function (data, fields, options) {
 
         // Restricting
         XP.forOwn(data, function (val, key) {
@@ -223,7 +292,7 @@ module.exports = _dereq_('./lib');
 
         // Sanitizing
         XP.forOwn(fields, function (field, key) {
-            data[key] = exp.sanitizeStep(data[key], field, fields, options, (name ? name + '.' : '') + key);
+            data[key] = sanitizeStep(data[key], fields, options, key);
             if (options.useful && XP.isVoid(data[key])) { delete data[key]; }
         });
 
@@ -234,64 +303,66 @@ module.exports = _dereq_('./lib');
      * Sanitizes the step
      *
      * @param {*} step
-     * @param {Object} [field]
      * @param {Object} [fields]
      * @param {Object} [options]
-     * @param {string} [name]
+     * @param {string} [key]
      * @returns {*}
      */
-    exp.sanitizeStep = function (step, field, fields, options, name) {
+    function sanitizeStep(step, fields, options, key) {
 
         // Setting
         step = XP.isDefined(step) ? step : null;
 
         // Checking
-        if (XP.isString(field, true)) { field = {type: field}; } else if (!XP.isObject(field)) { return step; }
+        if (!XP.isObject(fields[key]) && !XP.isString(fields[key], true)) { return step; }
 
         // Sanitizing (step)
-        step = exp.sanitizeValue(step, field, null, name);
+        step = sanitizeValue(step, fields, options, key);
 
         // Sanitizing (values)
-        if (field.map || field.multi) {
-            XP[field.map ? 'forOwn' : 'forEach'](step, function (value, index) {
-                step[index] = exp.sanitizeValue(value, field, index, name + '[' + index + ']');
-                if (XP.isObject(step[index]) && (field.fields || field.type === 'recursive')) {
-                    step[index] = exp(step[index], field.fields || fields, XP.assign({}, options, {loose: field.loose}), name + '[' + index + ']');
+        if (fields[key].map || fields[key].multi) {
+            XP[fields[key].map ? 'forOwn' : 'forEach'](step, function (value, index) {
+                step[index] = sanitizeValue(step[index], fields, key, index);
+                if (XP.isObject(step[index]) && (fields[key].fields || fields[key].type === 'recursive')) {
+                    step[index] = exp(step[index], fields[key].fields || fields, XP.assign({}, options, {loose: fields[key].loose}));
                 }
             });
-        } else if (XP.isObject(step) && (field.fields || field.type === 'recursive')) {
-            step = exp(step, field.fields || fields, XP.assign({}, options, {loose: field.loose}), name);
+        } else if (XP.isObject(step) && (fields[key].fields || fields[key].type === 'recursive')) {
+            step = exp(step, fields[key].fields || fields, XP.assign({}, options, {loose: fields[key].loose}));
         }
 
         return step;
-    };
+    }
 
     /**
      * Sanitizes the value
      *
      * @param {*} value
-     * @param {Object} [field]
+     * @param {Object} [fields]
+     * @param {Object} [options]
+     * @param {string} [key]
      * @param {number | string} [index]
-     * @param {string} [name]
      * @returns {*}
      */
-    exp.sanitizeValue = function (value, field, index, name) {
+    function sanitizeValue(value, fields, options, key, index) {
 
         // Setting
         value = XP.isDefined(value) ? value : null;
 
         // Vars
-        var key = (XP.isVoid(index) && ((field.map && 'map') || (field.multi && 'multi'))) || 'type',
-            val = exp.sanitizers[key].method(value, field[key], name);
+        var field     = (XP.isString(fields[key]) && {type: fields[key]}) || fields[key],
+            sanitizer = (XP.isVoid(index) && ((field.map && 'map') || (field.multi && 'multi'))) || 'type',
+            result    = exp.sanitizers[sanitizer].method(value, field[sanitizer]);
 
         // Sanitizing
-        XP.forOwn(field, function (sub, key) {
-            if (!exp.sanitizers[key] || key === 'map' || key === 'multi' || key === 'type') { return; }
-            val = exp.sanitizers[key].method(val, sub, name);
+        XP.forOwn(field, function (match, sanitizer) {
+            if (exp.sanitizers[sanitizer] && sanitizer !== 'map' && sanitizer !== 'multi' && sanitizer !== 'type') {
+                result = exp.sanitizers[sanitizer].method(result, match);
+            }
         });
 
-        return val;
-    };
+        return result;
+    }
 
     /*********************************************************************/
 
@@ -364,18 +435,18 @@ module.exports = _dereq_('./lib');
      *
      * @param {Object} data
      * @param {Object} fields
-     * @param {Object} [options]
+     * @param {Object} [item]
      * @param {string} [name]
      * @returns {Object}
      */
-    exp = module.exports = function (data, fields, options, name) {
+    exp = module.exports = function (data, fields, item, name) {
 
         // Trying
         try {
 
             // Validating
             XP.forOwn(fields, function (field, key) {
-                exp.validateStep(data[key], field, fields, options, (name ? name + '.' : '') + key);
+                validateStep(data[key], fields, item, (name ? name + '.' : '') + key, key);
             });
 
             return null;
@@ -389,61 +460,67 @@ module.exports = _dereq_('./lib');
      * Validates the step.
      *
      * @param {*} step
-     * @param {Object} [field]
      * @param {Object} [fields]
-     * @param {Object} [options]
+     * @param {Object} [item]
      * @param {string} [name]
+     * @param {string} [key]
+     * @throws Error
      */
-    exp.validateStep = function (step, field, fields, options, name) {
+    function validateStep(step, fields, item, name, key) {
 
         // Setting
         step = XP.isDefined(step) ? step : null;
 
         // Checking
-        if (XP.isString(field, true)) { field = {type: field}; } else if (!XP.isObject(field)) { return; }
+        if (!XP.isObject(fields[key]) && !XP.isString(fields[key], true)) { return; }
 
         // Validating (step)
-        exp.validateValue(step, field, null, name);
+        validateValue(step, fields, item, name, key);
 
         // Validating (values)
-        if (field.map || field.multi) {
-            XP[field.map ? 'forOwn' : 'forEach'](step, function (value, index) {
-                exp.validateValue(value, field, index, name + '[' + index + ']');
-                if (XP.isObject(value) && (field.fields || field.type === 'recursive')) {
-                    exp(value, field.fields || fields, XP.assign({}, options, {strict: field.strict}), name + '[' + index + ']');
+        if (fields[key].map || fields[key].multi) {
+            XP[fields[key].map ? 'forOwn' : 'forEach'](step, function (value, index) {
+                validateValue(value, fields, name + '[' + index + ']', key, index);
+                if (XP.isObject(value) && (fields[key].fields || fields[key].type === 'recursive')) {
+                    exp(value, fields[key].fields || fields, item, name + '[' + index + ']');
                 }
             });
-        } else if (XP.isObject(step) && (field.fields || field.type === 'recursive')) {
-            exp(step, field.fields || fields, XP.assign({}, options, {strict: field.strict}), name);
+        } else if (XP.isObject(step) && (fields[key].fields || fields[key].type === 'recursive')) {
+            exp(step, fields[key].fields || fields, item, name);
         }
-    };
+    }
 
     /**
      * Validates the value.
      *
      * @param {*} value
-     * @param {Object} [field]
-     * @param {number | string} [index]
+     * @param {Object} [fields]
+     * @param {Object} [item]
      * @param {string} [name]
+     * @param {string} [key]
+     * @param {number | string} [index]
+     * @throws Error
      */
-    exp.validateValue = function (value, field, index, name) {
+    function validateValue(value, fields, item, name, key, index) {
 
         // Setting
         value = XP.isDefined(value) ? value : null;
 
         // Vars
-        var key = (XP.isVoid(index) && ((field.map && 'map') || (field.multi && 'multi'))) || 'type',
-            err = exp.validators[key].method(value, field[key], name);
+        var field     = (XP.isString(fields[key]) && {type: fields[key]}) || fields[key],
+            validator = (XP.isVoid(index) && ((field.map && 'map') || (field.multi && 'multi'))) || 'type',
+            error     = exp.validators[validator].method(value, field[validator], name);
 
         // Throwing
-        if (err) { throw err; }
+        if (error) { throw error; }
 
         // Validating
-        XP.forOwn(field, function (sub, key) {
-            if (!exp.validators[key] || key === 'map' || key === 'multi' || key === 'type') { return; }
-            if (err = exp.validators[key].method(value, sub, name)) { throw err; }
+        XP.forOwn(field, function (match, validator) {
+            if (exp.validators[validator] && validator !== 'map' && validator !== 'multi' && validator !== 'type' && (validator !== 'immutable' || item)) {
+                if (error = exp.validators[validator].method(value, match, name, item && item[key])) { throw error; }
+            }
         });
-    };
+    }
 
     /*********************************************************************/
 
@@ -473,7 +550,6 @@ module.exports = _dereq_('./lib');
      * @type Object
      */
     exp.types = {
-        any: XP.isAny,
         boolean: XP.isBoolean,
         input: XP.isInput,
         number: XP.isFinite,
@@ -491,7 +567,7 @@ module.exports = _dereq_('./lib');
     exp.validators = {
 
         /**
-         * Returns error if value is gte than max
+         * Returns error if value is gte than max.
          *
          * @param {number} value
          * @param {number} max
@@ -503,7 +579,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value is lte than min
+         * Returns error if value is lte than min.
          *
          * @param {number} value
          * @param {number} min
@@ -515,7 +591,19 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value is not an map (based on bool)
+         * Returns error if value is not equivalent to current (based on bool).
+         *
+         * @param {*} value
+         * @param {boolean} bool
+         * @param {string} [name]
+         * @param {*} [current]
+         */
+        immutable: {input: 'checkbox', method: function (value, bool, name, current) {
+            return bool && !XP.isEquivalent(value, current) ? new XP.ImmutableError(name || 'data', 409) : null;
+        }},
+
+        /**
+         * Returns error if value is not an map (based on bool).
          *
          * @param {*} value
          * @param {boolean} bool
@@ -527,7 +615,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value is gt than max
+         * Returns error if value is gt than max.
          *
          * @param {number} value
          * @param {number} max
@@ -539,7 +627,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value length is gt than max
+         * Returns error if value length is gt than max.
          *
          * @param {Array} value
          * @param {number} max
@@ -551,7 +639,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value length is gt than max
+         * Returns error if value length is gt than max.
          *
          * @param {string} value
          * @param {number} max
@@ -563,7 +651,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value is lt than min
+         * Returns error if value is lt than min.
          *
          * @param {number} value
          * @param {number} min
@@ -575,7 +663,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value length is lt than min
+         * Returns error if value length is lt than min.
          *
          * @param {Array} value
          * @param {number} min
@@ -587,7 +675,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value length is lt than min
+         * Returns error if value length is lt than min.
          *
          * @param {string} value
          * @param {number} min
@@ -599,7 +687,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value is not array (based on bool)
+         * Returns error if value is not array (based on bool).
          *
          * @param {*} value
          * @param {boolean} bool
@@ -611,7 +699,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value is not multiple of val
+         * Returns error if value is not multiple of val.
          *
          * @param {number} value
          * @param {number} val
@@ -623,7 +711,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value matches pattern
+         * Returns error if value matches pattern.
          *
          * @param {string} value
          * @param {string} pattern
@@ -637,7 +725,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value is empty (based on bool)
+         * Returns error if value is empty (based on bool).
          *
          * @param {*} value
          * @param {boolean} bool
@@ -649,7 +737,7 @@ module.exports = _dereq_('./lib');
         }},
 
         /**
-         * Returns error if value type is not correct
+         * Returns error if value type is not correct.
          *
          * @param {*} value
          * @param {string} type
@@ -657,11 +745,11 @@ module.exports = _dereq_('./lib');
          * @returns {boolean | Error|null}
          */
         type: {attributes: {required: true}, options: XP.keys(exp.types), method: function (value, type, name) {
-            return XP.has(exp.types, type || 'any') && !exp.types[type || 'any'](value) && !XP.isNull(value) ? new XP.ValidationError(name || 'data', type || 'any', 400) : null;
+            return exp.types[type] && !exp.types[type](value) && !XP.isVoid(value) ? new XP.ValidationError(name || 'data', type || 'any', 400) : null;
         }},
 
         /**
-         * Returns error if value includes duplicates (based on bool)
+         * Returns error if value includes duplicates (based on bool).
          *
          * @param {Array} value
          * @param {boolean} bool
