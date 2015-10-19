@@ -52,7 +52,7 @@ module.exports = _dereq_('./lib');
          * @constructs
          * @param {Object} options
          *   @param {Object} [options.fields]
-         *   @param {boolean} [options.loose = false]
+         *   @param {boolean} [options.strict = false]
          *   @param {boolean} [options.useful = false]
          */
         initialize: function (options) {
@@ -66,7 +66,7 @@ module.exports = _dereq_('./lib');
             // Setting
             self.options = options;
             self.fields  = self.options.fields || {};
-            self.loose   = self.options.loose || false;
+            self.strict  = self.options.strict || false;
             self.useful  = self.options.useful || false;
         },
 
@@ -98,17 +98,17 @@ module.exports = _dereq_('./lib');
          * @method merge
          * @param {Object} data
          * @param {Object} [item]
-         * @param {boolean} [reserved = false]
+         * @param {boolean} [reservedOnly = false]
          * @param {Function} [resolver]
          * @returns {Promise}
          */
         merge: {
             promise: true,
-            value: function (data, item, reserved, resolver) {
+            value: function (data, item, reservedOnly, resolver) {
                 var self = this;
                 XP.waterfall([
                     function (next) { self._assert({data: data, item: item}, next); }, // asserting
-                    function (next) { next(null, XP.forOwn(item || {}, function (value, key) { if (!XP.isDefined(data[key]) && (!reserved || (self.fields[key] && self.fields[key].reserved))) { data[key] = item[key]; } })); }, // merging
+                    function (next) { next(null, XP.forOwn(item || {}, function (value, key) { if (!XP.isDefined(data[key]) && (!reservedOnly || (self.fields[key] && self.fields[key].reserved))) { data[key] = item[key]; } })); }, // merging
                     function (next) { next(null, data); } // resolving
                 ], resolver);
             }
@@ -190,16 +190,6 @@ module.exports = _dereq_('./lib');
         /**
          * TODO DOC
          *
-         * @property loose
-         * @type boolean
-         */
-        loose: {
-            set: function (val) { return !!val; }
-        },
-
-        /**
-         * TODO DOC
-         *
          * @property sanitizers
          * @type Object
          * @readonly
@@ -208,6 +198,17 @@ module.exports = _dereq_('./lib');
         sanitizers: {
             'static': true,
             get: function () { return sanitizers; }
+        },
+
+        /**
+         * TODO DOC
+         *
+         * @property strict
+         * @type boolean
+         * @default false
+         */
+        strict: {
+            set: function (val) { return !!val; }
         },
 
         /**
@@ -228,6 +229,7 @@ module.exports = _dereq_('./lib');
          *
          * @property useful
          * @type boolean
+         * @default false
          */
         useful: {
             set: function (val) { return !!val; }
@@ -249,8 +251,8 @@ module.exports = _dereq_('./lib');
         /*********************************************************************/
 
         // ASSERTS
-        _assertItem: {enumerable: false, value: function (val) { return !XP.isVoid(val) && !XP.isObject(val) && new XP.ValidationError('item', 'Object', 500); }},
-        _assertData: {enumerable: false, value: function (val) { return !XP.isObject(val) && new XP.ValidationError('data', 'Object', 400); }}
+        _assertData: {enumerable: false, value: function (val) { return !XP.isObject(val) && new XP.ValidationError('data', 'Object', 400); }},
+        _assertItem: {enumerable: false, value: function (val) { return !XP.isVoid(val) && !XP.isObject(val) && new XP.ValidationError('item', 'Object', 500); }}
     });
 
 }(typeof window !== "undefined" ? window : global));
@@ -287,7 +289,7 @@ module.exports = _dereq_('./lib');
 
         // Restricting
         XP.forOwn(data, function (val, key) {
-            if (!options.loose && !fields[key]) { delete data[key]; }
+            if (options.strict && !fields[key]) { delete data[key]; }
         });
 
         // Sanitizing
@@ -324,11 +326,11 @@ module.exports = _dereq_('./lib');
             XP[fields[key].map ? 'forOwn' : 'forEach'](step, function (value, index) {
                 step[index] = sanitizeValue(step[index], fields, key, index);
                 if (XP.isObject(step[index]) && (fields[key].fields || fields[key].type === 'recursive')) {
-                    step[index] = exp(step[index], fields[key].fields || fields, XP.assign({}, options, {loose: fields[key].loose}));
+                    step[index] = exp(step[index], fields[key].fields || fields, options);
                 }
             });
         } else if (XP.isObject(step) && (fields[key].fields || fields[key].type === 'recursive')) {
-            step = exp(step, fields[key].fields || fields, XP.assign({}, options, {loose: fields[key].loose}));
+            step = exp(step, fields[key].fields || fields, options);
         }
 
         return step;
