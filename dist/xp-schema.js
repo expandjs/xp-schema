@@ -625,7 +625,6 @@ module.exports = _dereq_('./lib');
      */
     exp.types = {
         boolean: XP.isBoolean,
-        input: XP.isInput,
         number: XP.isFinite,
         object: XP.isObject,
         recursive: XP.isObject,
@@ -850,6 +849,7 @@ module.exports = _dereq_('./lib');
     };
 
 }(typeof window !== "undefined" ? window : global));
+
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"expandjs":6}],6:[function(_dereq_,module,exports){
 
