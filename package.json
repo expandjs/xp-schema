@@ -1,36 +1,28 @@
 {
   "name": "xp-schema",
+  "description": "A class used to provide scheming functionality",
+  "version": "1.0.0",
   "license": "BSD-3-Clause",
-  "description": "This class is used to provide scheming functionalities, including sanitization and validation.",
-  "version": "0.10.0",
-  "homepage": "https://github.com/ExpandJS/xp-schema",
-  "author": "ExpandJS <dev@expandjs.com> (http://expandjs.com)",
+  "homepage": "https://expandjs.com/classes/xp-schema",
+  "author": "ExpandJS <dev@expandjs.com> (https://expandjs.com)",
+
   "contributors": [
     "Giuliano Rullo <g.rullo@expandjs.com>",
     "Maurizio Stefàno <m.stefano@expandjs.com>",
     "Robert Manolea <r.manolea@expandjs.com>"
   ],
+
   "repository": {
     "type": "git",
-    "url": "https://github.com/ExpandJS/xp-schema.git"
+    "url": "https://github.com/expandjs/xp-schema.git"
   },
+
   "dependencies": {
-    "expandjs": "0.10.0",
-    "xp-emitter": "0.10.0"
+    "expandjs": "^1.0.0",
+    "xp-emitter": "^1.0.0"
   },
-  "devDependencies": {
-    "browserify": "*",
-    "derequire": "*",
-    "minifyify": "*"
-  },
+
   "scripts": {
-    "build": "npm run build:browserify && npm run build:minify && node noconflict",
-    "build:browserify": "browserify index -i expandjs -i xp-emitter --standalone XPSchema | derequire > dist/xp-schema.js",
-    "build:minify": "browserify -d index -i expandjs -i xp-emitter --standalone XPSchema -p [minifyify --map xp-schema.min.map --output dist/xp-schema.min.map] | derequire > dist/xp-schema.min.js"
-  },
-  "keywords": [
-      "expandjs",
-      "web app",
-      "schema"
-  ]
+    "build": "webpack"
+  }
 }
